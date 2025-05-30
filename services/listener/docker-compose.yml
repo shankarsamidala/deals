@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  telegram-listener:
+    build:
+      context: ../../  # Build from project root
+      dockerfile: services/listener/Dockerfile
+    container_name: telegram-listener-fast
+    restart: unless-stopped
+    
+    environment:
+      # Application settings
+      - ENVIRONMENT=development
+      - APP_NAME=telegram-deal-monitor
+      - LOG_LEVEL=INFO
+      
+      # Telegram credentials (from .env)
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_SESSION_STRING=${TELEGRAM_SESSION_STRING}
+      
+      # MongoDB (optional - not used in fast mode)
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_DATABASE=${MONGODB_DATABASE}
+      - MONGODB_CONNECTION_TIMEOUT=${MONGODB_CONNECTION_TIMEOUT}
+      
+      # Discord notifications (optional)
+      - DISCORD_INCIDENTS_WEBHOOK=${DISCORD_INCIDENTS_WEBHOOK}
+      - DISCORD_MONITORING_WEBHOOK=${DISCORD_MONITORING_WEBHOOK}
+    
+    volumes:
+      # Mount logs directory for persistence
+      - ./logs:/app/logs
+      # Mount .env file
+      - ../../.env:/app/.env:ro
+    
+    # Resource limits for optimization
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import asyncio; from services.listener.main import TelegramListenerService; service = TelegramListenerService(); result = asyncio.run(service.health_check()); exit(0 if result['status'] == 'healthy' else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+    
+    # Labels for organization
+    labels:
+      - "com.telegram-monitor.service=listener"
+      - "com.telegram-monitor.environment=development"
+      - "com.telegram-monitor.version=1.0.0"
+
+networks:
+  default:
+    name: telegram-monitor-network
+    driver: bridge
+
+volumes:
+  logs:
+    driver: local

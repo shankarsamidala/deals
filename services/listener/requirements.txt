@@ -1,0 +1,30 @@
+# =====================
+# TELEGRAM LISTENER SERVICE DEPENDENCIES
+# =====================
+
+# Core dependencies
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# Telegram
+telethon==1.33.1
+
+# Logging
+structlog==23.2.0
+
+# Async utilities
+asyncio-extra==1.0.0
+
+# Optional: MongoDB (for future use)
+motor==3.3.2
+pymongo==4.6.0
+
+# Optional: HTTP clients (for health checks)
+aiohttp==3.9.1
+
+# Date utilities
+python-dateutil==2.8.2
+
+# Type hints
+typing-extensions==4.8.0
